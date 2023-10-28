@@ -1,0 +1,64 @@
+service: cubejs-lambda-duckdb
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sns:*"
+# Athena permissions
+#        - "athena:*"
+#        - "s3:*"
+#        - "glue:*"
+      Resource: '*'
+# When you uncomment vpc please make sure lambda has access to internet: https://medium.com/@philippholly/aws-lambda-enable-outgoing-internet-access-within-vpc-8dd250e11e12
+#  vpc:
+#    securityGroupIds:
+#     - sg-12345678901234567 # Your DB and Redis security groups here
+#    subnetIds:
+#     - subnet-12345678901234567 # Put here subnet with access to your DB, Redis and internet. For internet access 0.0.0.0/0 should be routed through NAT only for this subnet!
+  environment:
+    CUBEJS_DB_HOST: <YOUR_DB_HOST_HERE>
+    CUBEJS_DB_NAME: <YOUR_DB_NAME_HERE>
+    CUBEJS_DB_USER: <YOUR_DB_USER_HERE>
+    CUBEJS_DB_PASS: <YOUR_DB_PASS_HERE>
+    CUBEJS_DB_PORT: <YOUR_DB_PORT_HERE>
+    CUBEJS_REDIS_URL: <YOUR_REDIS_URL_HERE>
+    CUBEJS_DB_TYPE: duckdb
+    CUBEJS_API_SECRET: b787279a05a90effe8f92cd7b7c5a74867980e2bfa82ed25e71cc4bcd07a706849ee4498839da5405fe429c1f52085d1084ace29461a69e0e155dd2a8f2cfbad
+    CUBEJS_APP: "${self:service.name}-${self:provider.stage}"
+    NODE_ENV: production
+    AWS_ACCOUNT_ID:
+      Fn::Join:
+        - ""
+        - - Ref: "AWS::AccountId"
+
+functions:
+  cubejs:
+    handler: index.api
+    timeout: 30
+    events:
+      - http:
+          path: /
+          method: GET
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Request-Id
+              - X-Amz-Date
+              - X-Amz-Security-Token
+              - X-Api-Key
+  cubejsProcess:
+    handler: index.process
+    timeout: 630
+    events:
+      - sns: "${self:service.name}-${self:provider.stage}-process"
+
+plugins:
+  - serverless-express

@@ -1,0 +1,16 @@
+{
+  "name": "cubejs-lambda-duckdb",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "cubejs-dev-server"
+  },
+  "template": "serverless",
+  "templateVersion": "0.34.10",
+  "dependencies": {
+    "@cubejs-backend/duckdb-driver": "^0.34.10",
+    "@cubejs-backend/server": "^0.34.10",
+    "@cubejs-backend/serverless": "^0.34.10",
+    "@cubejs-backend/serverless-aws": "^0.34.10"
+  }
+}
